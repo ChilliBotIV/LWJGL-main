@@ -64,7 +64,9 @@ public class Window {
         });
         glfwMakeContextCurrent(NULL);
         return this;
+
     }
+
 
     /**
      * Performs the render and update loop.

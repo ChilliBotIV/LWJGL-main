@@ -38,7 +38,8 @@ public class Shader {
     public int getProgramID() {
         return programID;
     }
-
+    // 'this' refers to the current object that's being invoked. //
+    // Initializes 2 parameters and then the values of those parameters gets assigned to the instance i.e this.vertexShaderFileName = vertexShaderFileName; //
     Shader(String vertexShaderFileName, String fragmentShaderFileName) {
         this.vertexShaderFileName = vertexShaderFileName;
         this.fragmentShaderFileName = fragmentShaderFileName;
@@ -56,7 +57,7 @@ public class Shader {
     private String _bufferToString(ByteBuffer buffer) {
         return StandardCharsets.UTF_8.decode(buffer).toString();
     }
-
+    //  //
     private String loadFile(String filename) {
         String fileContent = null;
         Path path = Paths.get(System.getProperty("user.dir"), "shaders", filename).toAbsolutePath();

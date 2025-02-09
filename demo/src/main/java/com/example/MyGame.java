@@ -6,12 +6,20 @@ import org.lwjgl.system.MemoryUtil;
 import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
 
-import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_QUADS;
+import static org.lwjgl.opengl.GL11.GL_RGBA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glGenTextures;
 import static org.lwjgl.opengl.GL11.glLineWidth;
 import static org.lwjgl.opengl.GL11.glPointSize;
+import static org.lwjgl.opengl.GL11.glTexImage2D;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
@@ -21,15 +29,21 @@ import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glGetAttribLocation;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform1f;
+import static org.lwjgl.opengl.GL20.glUniform1i;
 import static org.lwjgl.opengl.GL20.glUniform2f;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.opengl.GL46.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
+import static org.lwjgl.glfw.GLFW.*;
 
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
+
+
+
 
 public class MyGame extends Game {
 
@@ -41,6 +55,7 @@ public class MyGame extends Game {
     Window window;
     float x;
     float y;
+
 
     public void init(Window window) {
         shader.initialize();
@@ -59,14 +74,14 @@ public class MyGame extends Game {
                 100, 100, 0, 0, 1
         };
         FloatBuffer fb = MemoryUtil.memCallocFloat(38);
-        fb.put(0, vertexData);
+        fb.put(0, vertexData); // Clears VertexData //
 
         buff = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, buff);
         glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        try {
+        try { // PNGDecoder. Gets the texture and then gets put into a bytebuffer and the data gets reset and then placed into a texture from 0-15. //
             PNGDecoder decoder = new PNGDecoder(MyGame.class.getResourceAsStream("texture.png"));
             ByteBuffer textureDataBuffer = MemoryUtil.memCalloc(4 * decoder.getWidth() * decoder.getHeight());
             decoder.decode(textureDataBuffer, decoder.getWidth() * 4, Format.RGBA);
@@ -83,10 +98,11 @@ public class MyGame extends Game {
             throw new RuntimeException(e);
         }
 
+
     }
 
     public void update(long currentTime, long deltaTime) {
-        offsetMove += deltaTime / 10f;
+        offsetMove += deltaTime / 10f; // float controls the speed of the square. //
         try (MemoryStack stack = stackPush()) {
             DoubleBuffer xbuff = stack.callocDouble(1);
             DoubleBuffer ybuff = stack.callocDouble(1);
@@ -140,6 +156,8 @@ public class MyGame extends Game {
         glPointSize(100);
         glUseProgram(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // Changes background colour. //
+
 
     }
 
@@ -157,5 +175,6 @@ public class MyGame extends Game {
 
     public void dispose() {
     }
+
 
 }
