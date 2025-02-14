@@ -57,7 +57,7 @@ public class Shader {
     private String _bufferToString(ByteBuffer buffer) {
         return StandardCharsets.UTF_8.decode(buffer).toString();
     }
-    //  //
+    // Loads contents from shader file and read it, then output the contents of it. //
     private String loadFile(String filename) {
         String fileContent = null;
         Path path = Paths.get(System.getProperty("user.dir"), "shaders", filename).toAbsolutePath();
