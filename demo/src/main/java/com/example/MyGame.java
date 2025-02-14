@@ -34,7 +34,6 @@ import static org.lwjgl.opengl.GL20.glUniform2f;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
-import static org.lwjgl.opengl.GL46.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -53,10 +52,16 @@ public class MyGame extends Game {
     Window window;
     float x;
     float y;
+    float square2Y;
+    float square2X;
+    float speed = 1.5f;
 
     public void init(Window window) {
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // Changes background colour. //
         shader.initialize();
         this.window = window;
+        square2Y = getRandomFloat(0, window.height - 3.0f);
+        square2X = getRandomFloat(0, window.width - 3.0f);
 
         float[] vertexData = new float[] {
                 -1.5f, -1.5f,
@@ -99,7 +104,10 @@ public class MyGame extends Game {
     }
 
     public void update(long currentTime, long deltaTime) {
-        offsetMove += deltaTime / 10f; // float controls the speed of the square. //
+        offsetMove += deltaTime / speed; // float controls the speed of the square. //
+        // Converts time to seconds. Doesn't have to be divided by 1000.0 but it'll show
+        // a floating point number like 5.0 instead of just 5 if it was 1000. //
+        double currentTimeSeconds = currentTime / 1000.0;
         try (MemoryStack stack = stackPush()) {
             DoubleBuffer xbuff = stack.callocDouble(1);
             DoubleBuffer ybuff = stack.callocDouble(1);
@@ -109,22 +117,48 @@ public class MyGame extends Game {
 
         }
 
-        float square1Size = 4.0f; // Size of the square that follows the cursor. //
-        float square2Size = 4.0f; // Size of the square that moves across the screen. //
+        float square1Size = 10.0f; // Size of the square that follows the cursor. //
+        float square2Size = 10.0f; // Size of the square that moves across the screen. //
         float square1X = x;
         float square1Y = y;
         float square2X = offsetMove;
-        float square2Y = 4.0f;
         // checks if the square goes offscreen. //
         if (square2X > window.width) {
             square2X = getRandomFloat(0, window.width - square2Size);
             square2Y = getRandomFloat(0, window.height - square2Size);
             offsetMove = square2X; // Update offsetMove to the new position //
         }
-        // This checks if the squares collidded and if so, it simply closes the program. //
+        // This checks if the squares collidded and if so, it simply closes the program
+        // and tells you how long you managed to survive in the terminal. //
         if (checkCollision(square1X, square1Y, square1Size, square2X, square2Y, square2Size)) {
             glfwSetWindowShouldClose(window.getWindowID(), true);
+            System.out.println("You survived for: " + currentTimeSeconds);
+
         }
+        // checks if the current time is equal to 25.0 and if so, change the background colour while the speed of the moving square increases. the '< 0.1' is there in case of any precision problems when comparing two double values. //
+        // I know this is the most unoptimized and worst way to implement something like this. //
+        if (Math.abs(currentTimeSeconds - 15.0) < 0.1) {
+            glClearColor(0.34f, 0.23f, 0.49f, 1.0f);
+            speed = 1.3f;
+        }
+
+        if (Math.abs(currentTimeSeconds - 30.0) < 0.1) {
+            glClearColor(0.26f, 0.26f, 0.54f, 1.0f);
+            speed = 1.1f;
+        }
+
+        if (Math.abs(currentTimeSeconds - 45.0) < 0.1) {
+            glClearColor(0.55f, 0.25f, 0.32f, 1.0f);
+            speed = 1.0f;
+        }
+
+        if (Math.abs(currentTimeSeconds - 60.0) < 0.1) {
+            glClearColor(0.16f, 0.11f, 0.21f, 1.0f);
+            speed = 0.8f;
+        }
+
+
+
     }
 
     public void draw() {
@@ -151,8 +185,7 @@ public class MyGame extends Game {
         glUniform2f(offsetLocation, x, y);
 
         glDrawArrays(GL_QUADS, 0, 4);
-        // System.out.println(offsetMove);
-        glUniform2f(offsetLocation, offsetMove, 4);
+        glUniform2f(offsetLocation, offsetMove, square2Y);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureId);
         glUniform1i(glGetUniformLocation(program, "mainTexture"), 0);
@@ -161,18 +194,16 @@ public class MyGame extends Game {
         glEnableVertexAttribArray(positionTexAttribLocation);
         int mainTextureAttribLocation = glGetAttribLocation(program, "Tex");
         glEnableVertexAttribArray(mainTextureAttribLocation);
-        // glVertexAttribPointer(positionTexAttribLocation, 2, GL_FLOAT, false, 5 * 4,
-        // 0);
         glVertexAttribPointer(mainTextureAttribLocation, 2, GL_FLOAT, false, 5 * 4, 0);
 
         glDrawArrays(GL_QUADS, 0, 4);
         glPointSize(100);
         glUseProgram(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // Changes background colour. //
 
     }
 
+    // Checks if the two squares collided/ //
     private boolean checkCollision(float square1X, float square1Y, float square1Size, float square2X, float square2Y,
             float square2Size) {
         return square1X < square2X + square2Size &&
@@ -183,6 +214,7 @@ public class MyGame extends Game {
 
     private final Random random = new Random();
 
+    // Generates random float value within a range and returns it. //
     private float getRandomFloat(float min, float max) {
         return min + random.nextFloat() * (max - min);
     }
