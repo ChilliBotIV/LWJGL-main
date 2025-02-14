@@ -41,9 +41,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-
-
-
+import java.util.Random;
 
 public class MyGame extends Game {
 
@@ -55,7 +53,6 @@ public class MyGame extends Game {
     Window window;
     float x;
     float y;
-
 
     public void init(Window window) {
         shader.initialize();
@@ -81,7 +78,8 @@ public class MyGame extends Game {
         glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        try { // PNGDecoder. Gets the texture and then gets put into a bytebuffer and the data gets reset and then placed into a texture from 0-15. //
+        try { // PNGDecoder. Gets the texture and then gets put into a bytebuffer and the data
+              // gets reset and then placed into a texture from 0-15. //
             PNGDecoder decoder = new PNGDecoder(MyGame.class.getResourceAsStream("texture.png"));
             ByteBuffer textureDataBuffer = MemoryUtil.memCalloc(4 * decoder.getWidth() * decoder.getHeight());
             decoder.decode(textureDataBuffer, decoder.getWidth() * 4, Format.RGBA);
@@ -98,7 +96,6 @@ public class MyGame extends Game {
             throw new RuntimeException(e);
         }
 
-
     }
 
     public void update(long currentTime, long deltaTime) {
@@ -112,6 +109,22 @@ public class MyGame extends Game {
 
         }
 
+        float square1Size = 4.0f; // Size of the square that follows the cursor. //
+        float square2Size = 4.0f; // Size of the square that moves across the screen. //
+        float square1X = x;
+        float square1Y = y;
+        float square2X = offsetMove;
+        float square2Y = 4.0f;
+        // checks if the square goes offscreen. //
+        if (square2X > window.width) {
+            square2X = getRandomFloat(0, window.width - square2Size);
+            square2Y = getRandomFloat(0, window.height - square2Size);
+            offsetMove = square2X; // Update offsetMove to the new position //
+        }
+        // This checks if the squares collidded and if so, it simply closes the program. //
+        if (checkCollision(square1X, square1Y, square1Size, square2X, square2Y, square2Size)) {
+            glfwSetWindowShouldClose(window.getWindowID(), true);
+        }
     }
 
     public void draw() {
@@ -158,7 +171,20 @@ public class MyGame extends Game {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // Changes background colour. //
 
+    }
 
+    private boolean checkCollision(float square1X, float square1Y, float square1Size, float square2X, float square2Y,
+            float square2Size) {
+        return square1X < square2X + square2Size &&
+                square1X + square1Size > square2X &&
+                square1Y < square2Y + square2Size &&
+                square1Y + square1Size > square2Y;
+    }
+
+    private final Random random = new Random();
+
+    private float getRandomFloat(float min, float max) {
+        return min + random.nextFloat() * (max - min);
     }
 
     public void handleKeyPress(int key, int action) {
@@ -175,6 +201,5 @@ public class MyGame extends Game {
 
     public void dispose() {
     }
-
 
 }
